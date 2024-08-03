@@ -45,6 +45,11 @@ class Task:
                 f"t_required={self.t_required}, t_allocated={self.t_allocated})")
     
 
+"""
+it handles one required time slot at a time. The function will find the necessary 
+available time slots to fulfill the required execution time within the specified 
+required interval.
+"""
 def allocate_time_to_task(T_available, T_required, execution_time):
     T_allocated = {tuple(interval): [] for interval in T_required}
     remaining_execution_time = execution_time
@@ -99,23 +104,40 @@ def test_allocate_time():
     T1 = Task(2.000, 4.000, 5.000)
     tasks = [T0, T1]
 
-    # Test example
+    # Test example1
     T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
-    T_required = [[0, 5], [4, 9], [8, 12]]
+    T_required = [0, 5]
+    execution_time = 2.0
+
+    IsOK, T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
+    print("T_allocated:", T_allocated) # expect T_allocated=[1,3]
+
+    # Test example2
+    T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
+    T_required = [4, 9]
     execution_time = 2.0
 
     T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
-    print("T_allocated:", T_allocated)
+    print("T_allocated:", T_allocated) # expect T_allocated=[4,6], IsOK=true
+        
+    # Test example3
+    T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
+    T_required = [8, 12]
+    execution_time = 2.0
+
+    T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
+    print("T_allocated:", T_allocated) # expect T_allocated=[[8,9],[10,12]]
+
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python3 ece_652_final.py <input_file>")
-        return
+    # if len(sys.argv) != 2:
+    #     print("Usage: python3 ece_652_final.py <input_file>")
+    #     return
 
-    filename = sys.argv[1]
-    read_file_to_list(filename) # read file and extract data to 'tasks'
-    print(tasks)
-
+    # filename = sys.argv[1]
+    # read_file_to_list(filename) # read file and extract data to 'tasks'
+    # print(tasks)
+    test_allocate_time()
 
 
 ## run the main here.
