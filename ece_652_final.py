@@ -15,11 +15,14 @@ Structure:
 5-Arrange the output
 """
 from math import gcd
+import math
+from functools import reduce
 import sys
 
 #******************************************************************************
 ## global data
 tasks = []
+g_hyperperiod = 0.0
 ENABLE_DEBUG_PRINT = True   #Enable or disable debug print 
 
 #******************************************************************************
@@ -38,9 +41,9 @@ def read_file_to_list(filename):
     global tasks # declare to use the global data
     tasks = []
     with open(filename, 'r') as file:
-        for line in file:
+        for line_number, line in enumerate(file):
             execution_time, period, deadline = map(float, line.strip().split(','))
-            task = Task(execution_time, period, deadline)
+            task = Task(execution_time, period, deadline, line_number)
             tasks.append(task)
     return tasks
 
@@ -50,7 +53,8 @@ def debug_pring(msg):
         print(msg)
 
 class Task:
-    def __init__(self, execution_time, period, deadline):
+    def __init__(self, execution_time, period, deadline, index=0):
+        self.index = index  #index in tasks, 0~len()-1
         self.execution_time = execution_time
         self.period = period
         self.deadline = deadline
@@ -70,7 +74,7 @@ class Task:
         return t_required
 
     def __repr__(self):
-        return (f"\nTask(execution_time={self.execution_time}, period={self.period}, "
+        return (f"T{self.index}: (execution_time={self.execution_time}, period={self.period}, "
                 f"deadline={self.deadline}, preemptions={self.preemptions}, "
                 f"\n---- T_required={self.t_required}, \n---- T_allocated={self.t_allocated})"
                 f"\n---- preemptions={self.preemptions}"
@@ -116,14 +120,25 @@ def allocate_time_to_task(T_available, T_required, execution_time):
 
 
 def print_task_allocations_report(tasks):
-    for index, task in enumerate(tasks):
+    for task in tasks:
         print("\n" + '-' * 80)
-        print(f"T{index}: {task}")
+        print(f"{task}")
+
+def calculate_hyperperiod(tasks):
+    periods = [task.period for task in tasks]
+    return reduce(lambda x, y: x * y // math.gcd(int(x), int(y)), periods)
+
+def calculate_priorities(tasks):
+    tasks.sort(key=lambda x: x.deadline)
+
+    NotImplemented
 
 def allocate_time_to_tasks(tasks):
-    # Sort tasks by deadline (Deadline Monotonic)
-    tasks.sort(key=lambda x: x.deadline)
-    T_available = [[0, 12]] # todo calculate_hyperperiod()
+
+    #calculate_priorities(tasks)    #1 Sort tasks by deadline (Deadline Monotonic)
+
+    g_hyperperiod = calculate_hyperperiod(tasks)
+    T_available = [[0, g_hyperperiod]] # todo calculate_hyperperiod()
     preemptions = []
     is_feasible = True
     for t in tasks:
@@ -137,11 +152,12 @@ def allocate_time_to_tasks(tasks):
             t.t_allocated += T_allocated
         preemptions.append(t.preemptions)
 
-    # print_task_allocations_report(tasks)
+    print_task_allocations_report(tasks)
     # debug_pring('*' * 80)
     # debug_pring(f"Remaining available time: {T_available}")
     return is_feasible, preemptions
 
+#******************************************************************************
 def main():
     if len(sys.argv) != 2:
         print("Usage: python3 ece_652_final.py <input_file>")
@@ -156,6 +172,7 @@ def main():
     else:
         print("0")
         print(",".join(map(str, preemptions)))
+
 ## run the main here.
 if __name__ == '__main__':
     main()
