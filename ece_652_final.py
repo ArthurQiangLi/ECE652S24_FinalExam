@@ -20,17 +20,45 @@ import sys
 #******************************************************************************
 ## global data
 tasks = []
+ENABLE_DEBUG_PRINT = True   #Enable or disable debug print 
 
 #******************************************************************************
+
+def lcm(a, b, precision=1e-5):
+    if a == 0 or b == 0:
+        return 0
+    scale = 10 ** 5  # Scale to handle floating points
+    a_scaled = int(a * scale)
+    b_scaled = int(b * scale)
+    result = abs(a_scaled * b_scaled) // gcd(a_scaled, b_scaled)
+    return result / scale
+
+
+def read_file_to_list(filename):
+    global tasks # declare to use the global data
+    tasks = []
+    with open(filename, 'r') as file:
+        for line in file:
+            execution_time, period, deadline = map(float, line.strip().split(','))
+            task = Task(execution_time, period, deadline)
+            tasks.append(task)
+    return tasks
+
+
+def debug_pring(msg):
+    if(ENABLE_DEBUG_PRINT):
+        print(msg)
+
 class Task:
     def __init__(self, execution_time, period, deadline):
         self.execution_time = execution_time
         self.period = period
         self.deadline = deadline
-        self.preemptions = 0
+        self.priority = 0 # to be calculated according to others
         self.t_required = self.calculate_required_times()
         self.t_allocated = []
         self.is_feasible = False
+        self.preemptions = 0
 
 
     def calculate_required_times(self):
@@ -42,7 +70,7 @@ class Task:
         return t_required
 
     def __repr__(self):
-        return (f"Task(execution_time={self.execution_time}, period={self.period}, "
+        return (f"\nTask(execution_time={self.execution_time}, period={self.period}, "
                 f"deadline={self.deadline}, preemptions={self.preemptions}, "
                 f"\n---- T_required={self.t_required}, \n---- T_allocated={self.t_allocated})"
                 f"\n---- preemptions={self.preemptions}"
@@ -82,77 +110,52 @@ def allocate_time_to_task(T_available, T_required, execution_time):
     T_available = [item for item in T_available if item not in used_T_available]  #T_available - used_T_available
     T_available += unused_T_available                      # add back unused slots 
     T_available = sorted(T_available)                      #
-    #print("T_available", T_available)
 
     IsOK = remaining_execution_time == 0
     return T_available, T_allocated, IsOK
 
-def lcm(a, b, precision=1e-5):
-    if a == 0 or b == 0:
-        return 0
-    scale = 10 ** 5  # Scale to handle floating points
-    a_scaled = int(a * scale)
-    b_scaled = int(b * scale)
-    result = abs(a_scaled * b_scaled) // gcd(a_scaled, b_scaled)
-    return result / scale
 
-
-def read_file_to_list(filename):
-    global tasks #declare to use the global data
-    tasks = []
-    with open(filename, 'r') as file:
-        for line in file:
-            tasks.append(list(map(float, line.strip().split(',')))) ## parse as 'float' type data.
-    return tasks
-
-def print_task_allocations(tasks):
+def print_task_allocations_report(tasks):
     for index, task in enumerate(tasks):
         print("\n" + '-' * 80)
         print(f"T{index}: {task}")
 
-def test_allocate_time():
-    # Initialize tasks
-    T0 = Task(1.000, 3.000, 3.000)
-    T1 = Task(2.000, 4.000, 5.000)
-    tasks = [T0, T1]
+def allocate_time_to_tasks(tasks):
     # Sort tasks by deadline (Deadline Monotonic)
     tasks.sort(key=lambda x: x.deadline)
-    T_available = [[0, 12]] # todo hyperperiodß
+    T_available = [[0, 12]] # todo calculate_hyperperiod()
+    preemptions = []
+    is_feasible = True
+    for t in tasks:
+        for req in t.t_required:
+            T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, t.execution_time)
+            t.is_feasible = IsOK
+            if not IsOK:
+                is_feasible = False
+                break; 
+            t.preemptions += (len(T_allocated) - 1)
+            t.t_allocated += T_allocated
+        preemptions.append(t.preemptions)
 
-    # Test example1
-    for req in T0.t_required:
-        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, T0.execution_time)
-        T0.is_feasible = IsOK
-        if not IsOK:
-            break; 
-        T0.preemptions += (len(T_allocated) - 1)
-        T0.t_allocated += T_allocated
-
-    for req in T1.t_required:
-        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, T1.execution_time)
-        T1.is_feasible = IsOK
-        if not IsOK:
-            break; 
-        T1.preemptions += (len(T_allocated) - 1)
-        T1.t_allocated += T_allocated
-    
-    print_task_allocations(tasks)
-    print('-' * 80)
-    print(f"Remaining available time: {T_available}")
-
-
+    # print_task_allocations_report(tasks)
+    # debug_pring('*' * 80)
+    # debug_pring(f"Remaining available time: {T_available}")
+    return is_feasible, preemptions
 
 def main():
-    # if len(sys.argv) != 2:
-    #     print("Usage: python3 ece_652_final.py <input_file>")
-    #     return
+    if len(sys.argv) != 2:
+        print("Usage: python3 ece_652_final.py <input_file>")
+        return
 
-    # filename = sys.argv[1]
-    # read_file_to_list(filename) # read file and extract data to 'tasks'
-    # print(tasks)
-    test_allocate_time()
-
-
+    filename = sys.argv[1]
+    read_file_to_list(filename) # read file and extract data to 'tasks'
+    is_ok, preemptions = allocate_time_to_tasks(tasks)
+    if is_ok:
+        print("1")
+        print(",".join(map(str, preemptions)))
+    else:
+        print("0")
+        print(",".join(map(str, preemptions)))
 ## run the main here.
 if __name__ == '__main__':
     main()
