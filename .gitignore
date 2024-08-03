@@ -1,6 +1,7 @@
 ## my others
 *.pdf
-__draft.py
+__*.py
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -42,7 +42,7 @@ def main():
 
     filename = sys.argv[1]
     read_file_to_list(filename) # read file and extract data to 'tasks'
-    #print(tasks)
+    print('0')
 
 
 
