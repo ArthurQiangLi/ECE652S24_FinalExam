@@ -28,11 +28,20 @@ class TestECE(unittest.TestCase):
             result = ece_652_final.read_file_to_list('workload2.txt')
             self.assertEqual(result, expected_output)
 
-    def test_read_file_to_list__function_execution(self):
-        # Mock data simulating the content of workload1.txt
+    def test_read_file_to_list__function_execution_integer(self):
         mock_data = "2,14,25\n4,16,17\n8,21,25\n5,20,30\n7,14,25\n"
-        # Expected output after processing the mock data
         expected_output = [[2, 14, 25], [4, 16, 17], [8, 21, 25], [5, 20, 30], [7, 14, 25]]
+
+        # Use patch to replace 'open' with a mock object
+        with patch('builtins.open', mock_open(read_data=mock_data)):
+            # Call the function to read from the "file"
+            ece_652_final.read_file_to_list('workload1.txt')
+            # Check if the global tasks list matches the expected output
+            self.assertEqual(ece_652_final.tasks, expected_output)
+
+    def test_read_file_to_list__function_execution_float(self):
+        mock_data = "2.12,14,25\n4,16,17\n8,21.333,25\n5,20,30\n7,14,25.5\n"
+        expected_output = [[2.12, 14, 25], [4, 16, 17], [8, 21.333, 25], [5, 20, 30], [7, 14, 25.5]]
 
         # Use patch to replace 'open' with a mock object
         with patch('builtins.open', mock_open(read_data=mock_data)):

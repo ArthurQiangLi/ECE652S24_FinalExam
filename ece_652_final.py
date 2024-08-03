@@ -31,10 +31,8 @@ def read_file_to_list(filename):
     tasks = []
     with open(filename, 'r') as file:
         for line in file:
-            tasks.append(list(map(int, line.strip().split(','))))
+            tasks.append(list(map(float, line.strip().split(',')))) ## parse as 'float' type data.
     return tasks
-
-
 
 
 def main():
