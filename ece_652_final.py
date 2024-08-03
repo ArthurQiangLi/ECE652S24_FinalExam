@@ -22,6 +22,57 @@ import sys
 tasks = []
 
 #******************************************************************************
+class Task:
+    def __init__(self, execution_time, period, deadline):
+        self.execution_time = execution_time
+        self.period = period
+        self.deadline = deadline
+        self.preemptions = 0
+        self.t_required = self.calculate_required_times()
+        self.t_allocated = []
+
+    def calculate_required_times(self):
+        t_required = []
+        time = 0
+        while time + self.period <= 12:
+            t_required.append((time, time + self.deadline))
+            time += self.period
+        return t_required
+
+    def __repr__(self):
+        return (f"Task(execution_time={self.execution_time}, period={self.period}, "
+                f"deadline={self.deadline}, preemptions={self.preemptions}, "
+                f"t_required={self.t_required}, t_allocated={self.t_allocated})")
+    
+
+def allocate_time_to_task(T_available, T_required, execution_time):
+    T_allocated = {tuple(interval): [] for interval in T_required}
+    remaining_execution_time = execution_time
+
+    for (start, end) in T_required:
+        if remaining_execution_time <= 0:
+            break
+        new_T_available = []
+        for (a_start, a_end) in T_available:
+            if a_end <= start or a_start >= end:
+                new_T_available.append([a_start, a_end])
+            else:
+                if a_start < start:
+                    new_T_available.append([a_start, start])
+                alloc_start = max(a_start, start)
+                alloc_end = min(a_end, end)
+                while remaining_execution_time > 0 and alloc_start < alloc_end:
+                    allocation_length = min(remaining_execution_time, alloc_end - alloc_start)
+                    T_allocated[(start, end)].append([alloc_start, alloc_start + allocation_length])
+                    remaining_execution_time -= allocation_length
+                    alloc_start += allocation_length
+                    if alloc_start < a_end:
+                        new_T_available.append([alloc_start, a_end])
+                if remaining_execution_time <= 0:
+                    break
+        T_available = new_T_available
+    
+    return T_allocated
 
 def lcm(a, b, precision=1e-5):
     if a == 0 or b == 0:
@@ -41,6 +92,20 @@ def read_file_to_list(filename):
             tasks.append(list(map(float, line.strip().split(',')))) ## parse as 'float' type data.
     return tasks
 
+
+def test_allocate_time():
+    # Initialize tasks
+    T0 = Task(1.000, 3.000, 3.000)
+    T1 = Task(2.000, 4.000, 5.000)
+    tasks = [T0, T1]
+
+    # Test example
+    T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
+    T_required = [[0, 5], [4, 9], [8, 12]]
+    execution_time = 2.0
+
+    T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
+    print("T_allocated:", T_allocated)
 
 def main():
     if len(sys.argv) != 2:

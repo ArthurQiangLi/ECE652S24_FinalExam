@@ -63,4 +63,12 @@ T0 = Task(1.000, 3.000, 3.000)
 T1 = Task(2.000, 4.000, 5.000)
 tasks = [T0, T1]
 T_available = [[0,12]]
+
+
+
+T_available = [[1,3], [4,6], [7,9], [10, 12]]
+T_required = [[0, 5], [4, 9], [8, 12]]
+execution_time = 2.0
+Expected result: T_allocated = {[0, 5]:[1,3], [4, 9]: [4,6], [8, 12]: [8,9], [10,11]}
+
 ```
