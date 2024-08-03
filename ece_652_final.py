@@ -30,6 +30,8 @@ class Task:
         self.preemptions = 0
         self.t_required = self.calculate_required_times()
         self.t_allocated = []
+        self.is_feasible = False
+
 
     def calculate_required_times(self):
         t_required = []
@@ -42,7 +44,9 @@ class Task:
     def __repr__(self):
         return (f"Task(execution_time={self.execution_time}, period={self.period}, "
                 f"deadline={self.deadline}, preemptions={self.preemptions}, "
-                f"t_required={self.t_required}, t_allocated={self.t_allocated})")
+                f"\n---- T_required={self.t_required}, \n---- T_allocated={self.t_allocated})"
+                f"\n---- preemptions={self.preemptions}"
+                "\n" + '.'*70 + f"feasible= {self.is_feasible}")
     
 
 """
@@ -101,36 +105,41 @@ def read_file_to_list(filename):
             tasks.append(list(map(float, line.strip().split(',')))) ## parse as 'float' type data.
     return tasks
 
+def print_task_allocations(tasks):
+    for index, task in enumerate(tasks):
+        print("\n" + '-' * 80)
+        print(f"T{index}: {task}")
 
 def test_allocate_time():
     # Initialize tasks
     T0 = Task(1.000, 3.000, 3.000)
     T1 = Task(2.000, 4.000, 5.000)
     tasks = [T0, T1]
+    # Sort tasks by deadline (Deadline Monotonic)
+    tasks.sort(key=lambda x: x.deadline)
+    T_available = [[0, 12]] # todo hyperperiodß
 
     # Test example1
-    T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
-    T_required = [0, 5]
-    execution_time = 2.0
+    for req in T0.t_required:
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, T0.execution_time)
+        T0.is_feasible = IsOK
+        if not IsOK:
+            break; 
+        T0.preemptions += (len(T_allocated) - 1)
+        T0.t_allocated += T_allocated
 
-    IsOK, T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
-    print("T_allocated:", T_allocated) # expect T_allocated=[1,3]
+    for req in T1.t_required:
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, T1.execution_time)
+        T1.is_feasible = IsOK
+        if not IsOK:
+            break; 
+        T1.preemptions += (len(T_allocated) - 1)
+        T1.t_allocated += T_allocated
+    
+    print_task_allocations(tasks)
+    print('-' * 80)
+    print(f"Remaining available time: {T_available}")
 
-    # Test example2
-    T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
-    T_required = [4, 9]
-    execution_time = 2.0
-
-    T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
-    print("T_allocated:", T_allocated) # expect T_allocated=[4,6], IsOK=true
-        
-    # Test example3
-    T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
-    T_required = [8, 12]
-    execution_time = 2.0
-
-    T_allocated = allocate_time_to_task(T_available, T_required, execution_time)
-    print("T_allocated:", T_allocated) # expect T_allocated=[[8,9],[10,12]]
 
 
 def main():
