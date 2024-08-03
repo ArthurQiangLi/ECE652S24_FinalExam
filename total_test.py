@@ -1,7 +1,7 @@
 # test_lcm.py
 
 import ece_652_final
-from  ece_652_final import lcm
+from  ece_652_final import lcm, allocate_time_to_task
 import unittest
 from math import isclose
 from unittest.mock import mock_open, patch
@@ -19,7 +19,7 @@ class TestLCM(unittest.TestCase):
         self.assertTrue(isclose(lcm(1.25, 10), 10, rel_tol=1e-5))
 
 
-class TestECE(unittest.TestCase):
+class TestReadFile(unittest.TestCase):
     def test_read_file_to_list__function(self):
         mock_data = "2,14,25\n4,16,17\n8,21,25\n5,20,30\n7,14,25\n"
         expected_output = [[2, 14, 25], [4, 16, 17], [8, 21, 25], [5, 20, 30], [7, 14, 25]]
@@ -50,6 +50,104 @@ class TestECE(unittest.TestCase):
             # Check if the global tasks list matches the expected output
             self.assertEqual(ece_652_final.tasks, expected_output)
 
+class TestAllocateTimeToTask(unittest.TestCase):
+    def test_example1(self):
+        T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
+        T_required = [0, 5]
+        execution_time = 2.0
+
+        expected_T_available = [[4, 6], [7, 9], [10, 12]]
+        expected_T_allocated = [[1, 3.0]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
+
+    def test_example2(self):
+        T_available = [ [4, 6], [7, 9], [10, 12]]
+        T_required = [4, 9]
+        execution_time = 2.0
+
+        expected_T_available = [[7, 9], [10, 12]]
+        expected_T_allocated = [[4, 6.0]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
+
+    def test_example3(self):
+        T_available = [[7, 9], [10, 12]]
+        T_required = [8, 12]
+        execution_time = 2.0
+
+        expected_T_available = [[7, 8], [11, 12]]
+        expected_T_allocated = [[8, 9], [10, 11]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
+
+    def test_example4(self):
+        T_available = [[0, 12]]
+        T_required = [0, 3]
+        execution_time = 1
+
+        expected_T_available = [[1, 12]]
+        expected_T_allocated = [[0, 1]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
+
+    def test_example5(self):
+        T_available = [[1, 12]]
+        T_required = [3, 6]
+        execution_time = 1
+
+        expected_T_available = [[1,3],[4, 12]]
+        expected_T_allocated = [[3, 4]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
+
+    def test_example6(self):
+        T_available = [[1,3],[4, 12]]
+        T_required = [6, 9]
+        execution_time = 1
+
+        expected_T_available = [[1,3],[4,6],[7, 12]]
+        expected_T_allocated = [[6, 7]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
+
+    def test_example6(self):
+        T_available = [[1,3],[4,6],[7, 12]]
+        T_required = [9, 12]
+        execution_time = 1
+
+        expected_T_available = [[1,3],[4,6],[7,9], [10, 12]]
+        expected_T_allocated = [[9, 10]]
+        expected_IsOK = True
+
+        T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, execution_time)
+        self.assertEqual(T_available, expected_T_available)
+        self.assertEqual(T_allocated, expected_T_allocated)
+        self.assertEqual(IsOK, expected_IsOK)
 
 if __name__ == "__main__":
     unittest.main(argv=[''], exit=False)

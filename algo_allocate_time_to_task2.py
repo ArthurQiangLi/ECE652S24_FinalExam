@@ -2,13 +2,13 @@ def allocate_time_to_task(T_available, T_required, execution_time):
     T_allocated = []
     remaining_execution_time = execution_time
     r_start, r_end = T_required
-
     unused_T_available = []
+    used_T_available = []                                   # to remove from T_available
     for (a_start, a_end) in T_available:
         if a_end <= r_start or a_start >= r_end:            # if there is NO overlap, sad
             continue                                        # skip this available slot
         else: # there is overlap between (r_start, r_end) and (a_start, a_end)
-            T_available.remove([a_start, a_end])            # remove the available slot, (add back unused part later)
+            used_T_available.append([a_start, a_end])       # to remove the available slot, (add back unused part later)
             if a_start < r_start:
                 unused_T_available.append([a_start, r_start])  # this front part is not used, to return back to T_available
             olp_start = max(a_start, r_start)               # (olp_start, olp_end) is the overlapped part
@@ -23,9 +23,10 @@ def allocate_time_to_task(T_available, T_required, execution_time):
         if remaining_execution_time <= 0:
             break
 
-    T_available += unused_T_available                      # update T_available
-    T_available = sorted(T_available)
-    print("T_available", T_available)
+    T_available = [item for item in T_available if item not in used_T_available]  #T_available - used_T_available
+    T_available += unused_T_available                      # add back unused slots 
+    T_available = sorted(T_available)                      #
+    #print("T_available", T_available)
 
     IsOK = remaining_execution_time == 0
     return T_available, T_allocated, IsOK
@@ -47,7 +48,7 @@ T_available, T_allocated, IsOK = allocate_time_to_task(T_available, T_required, 
 print("#### T_allocated:", T_allocated, ">>>>>> IsOK:", IsOK) # expect T_allocated=[4,6]
     
 # Test example3
-#T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
+T_available = [[1, 3], [4, 6], [7, 9], [10, 12]]
 T_required = [8, 12]
 execution_time = 2.0
 
