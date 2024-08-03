@@ -6,6 +6,13 @@ preempted per hyperperiod.
 * ece_652_final.py
 * 1,3,2 precision up to 0.001, better use list to store each task
 * In the event two tasks Ti and Tj have the same deadline, the lower identifier takes priority
+***************************
+Structure:
+1-Read task from a file
+2-Calculate hyperperiod
+3-Sort task priority
+4-Allocate time slots and count preemptions
+5-Arrange the output
 """
 from math import gcd
 import sys
@@ -42,7 +49,7 @@ def main():
 
     filename = sys.argv[1]
     read_file_to_list(filename) # read file and extract data to 'tasks'
-    print('0')
+    print(tasks)
 
 
 
