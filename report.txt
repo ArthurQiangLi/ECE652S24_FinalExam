@@ -7,41 +7,39 @@ Expected result:
 1
 0,1
 **********************************************************
-[2/6] Testing workload2.txt >>>>>>>>>>>>>>>>>  NG
+[2/6] Testing workload2.txt >>>>>>>>>>>>>>>>>  OK
 Your result:
-1
-0,0,0,0,0
+0
 Expected result:
 0
 **********************************************************
-[3/6] Testing workload3.txt >>>>>>>>>>>>>>>>>  NG
+[3/6] Testing workload3.txt >>>>>>>>>>>>>>>>>  OK
 Your result:
 1
-0,0,0,0,0
+0,0,0,7,0
 Expected result:
 1
 0,0,0,7,0
 **********************************************************
-[4/6] Testing workload4.txt >>>>>>>>>>>>>>>>>  NG
+[4/6] Testing workload4.txt >>>>>>>>>>>>>>>>>  OK
 Your result:
 1
-0,0,1,0
+0,1,0,0
 Expected result:
 1
 0,1,0,0
 **********************************************************
-[5/6] Testing workload5.txt >>>>>>>>>>>>>>>>>  NG
+[5/6] Testing workload5.txt >>>>>>>>>>>>>>>>>  OK
 Your result:
 1
-0,0,2,0
+0,3,0,0
 Expected result:
 1
 0,3,0,0
 **********************************************************
-[6/6] Testing workload6.txt >>>>>>>>>>>>>>>>>  NG
+[6/6] Testing workload6.txt >>>>>>>>>>>>>>>>>  OK
 Your result:
-1
-0,0,1,0,0
+0
 Expected result:
 0
 **********************************************************

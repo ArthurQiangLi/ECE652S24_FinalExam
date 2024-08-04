@@ -26,3 +26,8 @@ Workload 5:
 Workload 6:
 
 0
+
+Workload 7:
+
+1
+

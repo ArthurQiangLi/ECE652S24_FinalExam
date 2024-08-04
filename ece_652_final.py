@@ -59,24 +59,24 @@ class Task:
         self.period = period
         self.deadline = deadline
         self.priority = 0 # to be calculated according to others
-        self.t_required = self.calculate_required_times()
+        self.t_required = []
         self.t_allocated = []
         self.is_feasible = False
         self.preemptions = 0
 
 
-    def calculate_required_times(self):
+    def calculate_required_times(self, hyperperiod):
         t_required = []
         time = 0
-        while time + self.period <= 12:
+        while time + self.period <= hyperperiod:
             t_required.append((time, time + self.deadline))
             time += self.period
         return t_required
 
     def __repr__(self):
-        return (f"T{self.index}: (execution_time={self.execution_time}, period={self.period}, "
-                f"deadline={self.deadline}, preemptions={self.preemptions}, "
-                f"\n---- T_required={self.t_required}, \n---- T_allocated={self.t_allocated})"
+        return (f"T{self.index}: e={self.execution_time}, per={self.period}, "
+                f"d={self.deadline}, preem={self.preemptions}, prio={self.priority}"
+                f"\n---- T_required={self.t_required}, \n---- T_allocated={self.t_allocated}"
                 f"\n---- preemptions={self.preemptions}"
                 "\n" + '.'*70 + f"feasible= {self.is_feasible}")
     
@@ -118,30 +118,26 @@ def allocate_time_to_task(T_available, T_required, execution_time):
     IsOK = remaining_execution_time == 0
     return T_available, T_allocated, IsOK
 
-
-def print_task_allocations_report(tasks):
-    for task in tasks:
-        print("\n" + '-' * 80)
-        print(f"{task}")
-
 def calculate_hyperperiod(tasks):
     periods = [task.period for task in tasks]
     return reduce(lambda x, y: x * y // math.gcd(int(x), int(y)), periods)
 
-def calculate_priorities(tasks):
-    tasks.sort(key=lambda x: x.deadline)
-
-    NotImplemented
+# def calculate_priorities(tasks):
 
 def allocate_time_to_tasks(tasks):
-
-    #calculate_priorities(tasks)    #1 Sort tasks by deadline (Deadline Monotonic)
-
+# Just after get 'tasks' from reading a file
+     #[1st, get hyperperiod, to let calculate T_required for each task]
     g_hyperperiod = calculate_hyperperiod(tasks)
     T_available = [[0, g_hyperperiod]] # todo calculate_hyperperiod()
-    preemptions = []
+
+    tasks.sort(key=lambda x: (x.deadline, x.index)) # calculate_priorities(tasks)    #1 Sort tasks by deadline (Deadline Monotonic)
+    for i, t in enumerate(tasks):
+        t.priority = i # assign priority from 0~len-1 to each task, for display use
+        t.t_required = t.calculate_required_times(g_hyperperiod)
+
     is_feasible = True
-    for t in tasks:
+    # [schedule for all tasks]
+    for t in tasks:                 # Note tasks are in priority order
         for req in t.t_required:
             T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, t.execution_time)
             t.is_feasible = IsOK
@@ -150,12 +146,24 @@ def allocate_time_to_tasks(tasks):
                 break; 
             t.preemptions += (len(T_allocated) - 1)
             t.t_allocated += T_allocated
-        preemptions.append(t.preemptions)
 
-    print_task_allocations_report(tasks)
-    # debug_pring('*' * 80)
-    # debug_pring(f"Remaining available time: {T_available}")
+    # [get preemptions list]
+    preemptions = []
+    if IsOK:
+        tasks.sort(key=lambda x: x.index) # re-order to the task file line order
+        for t in tasks:
+            preemptions.append(t.preemptions)
+
     return is_feasible, preemptions
+
+
+def print_task_allocations_report(tasks):
+    print(f"hyperperiod = {g_hyperperiod}")
+
+    for task in tasks:
+        print("\n" + '-' * 80)
+        print(f"{task}")
+
 
 #******************************************************************************
 def main():
@@ -166,12 +174,12 @@ def main():
     filename = sys.argv[1]
     read_file_to_list(filename) # read file and extract data to 'tasks'
     is_ok, preemptions = allocate_time_to_tasks(tasks)
+    # print_task_allocations_report(tasks)
     if is_ok:
         print("1")
         print(",".join(map(str, preemptions)))
     else:
         print("0")
-        print(",".join(map(str, preemptions)))
 
 ## run the main here.
 if __name__ == '__main__':
