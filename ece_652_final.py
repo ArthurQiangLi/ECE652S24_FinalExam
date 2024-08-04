@@ -18,24 +18,21 @@ from math import gcd
 import math
 from functools import reduce
 import sys
-
 #******************************************************************************
 ## global data
 tasks = []
 g_hyperperiod = 0.0
-ENABLE_DEBUG_PRINT = True   #Enable or disable debug print 
-
+ENABLE_DEBUG_PRINT = False   # Enable or disable debug print 
+PRECISION_FACTOR = 100000   # 0.00001 precision
 #******************************************************************************
+def lcm(x, y):
+    return x * y // math.gcd(x, y)
 
-def lcm(a, b, precision=1e-5):
-    if a == 0 or b == 0:
-        return 0
-    scale = 10 ** 5  # Scale to handle floating points
-    a_scaled = int(a * scale)
-    b_scaled = int(b * scale)
-    result = abs(a_scaled * b_scaled) // gcd(a_scaled, b_scaled)
-    return result / scale
-
+def calculate_hyperperiod(periods):
+    int_periods = [int(period * PRECISION_FACTOR) for period in periods]
+    hyperperiod_int = reduce(lcm, int_periods)# Calculate the LCM of the integer periods
+    hyperperiod = hyperperiod_int / PRECISION_FACTOR    # Convert the hyperperiod back to the original scale
+    return hyperperiod
 
 def read_file_to_list(filename):
     global tasks # declare to use the global data
@@ -47,11 +44,11 @@ def read_file_to_list(filename):
             tasks.append(task)
     return tasks
 
-
 def debug_pring(msg):
     if(ENABLE_DEBUG_PRINT):
         print(msg)
 
+#******************************************************************************
 class Task:
     def __init__(self, execution_time, period, deadline, index=0):
         self.index = index  #index in tasks, 0~len()-1
@@ -63,7 +60,6 @@ class Task:
         self.t_allocated = []
         self.is_feasible = False
         self.preemptions = 0
-
 
     def calculate_required_times(self, hyperperiod):
         t_required = []
@@ -78,14 +74,11 @@ class Task:
                 f"d={self.deadline}, preem={self.preemptions}, prio={self.priority}"
                 f"\n---- T_required={self.t_required}, \n---- T_allocated={self.t_allocated}"
                 f"\n---- preemptions={self.preemptions}"
-                "\n" + '.'*70 + f"feasible= {self.is_feasible}")
+                "\n" + '.'*70 + f"[feasible: {'OK' if self.is_feasible else 'NG'}]")
     
-
-"""
-it handles one required time slot at a time. The function will find the necessary 
-available time slots to fulfill the required execution time within the specified 
-required interval.
-"""
+#******************************************************************************
+#  Main algorithm
+#Handles one required time slot at a time. The function will find the necessary available time slots to fulfill the required execution time within the specified required interval.
 def allocate_time_to_task(T_available, T_required, execution_time):
     T_allocated = []
     remaining_execution_time = execution_time
@@ -118,26 +111,25 @@ def allocate_time_to_task(T_available, T_required, execution_time):
     IsOK = remaining_execution_time == 0
     return T_available, T_allocated, IsOK
 
-def calculate_hyperperiod(tasks):
-    periods = [task.period for task in tasks]
-    return reduce(lambda x, y: x * y // math.gcd(int(x), int(y)), periods)
 
-# def calculate_priorities(tasks):
-
-def allocate_time_to_tasks(tasks):
 # Just after get 'tasks' from reading a file
-     #[1st, get hyperperiod, to let calculate T_required for each task]
-    g_hyperperiod = calculate_hyperperiod(tasks)
-    T_available = [[0, g_hyperperiod]] # todo calculate_hyperperiod()
+def allocate_time_to_tasks(tasks):
 
-    tasks.sort(key=lambda x: (x.deadline, x.index)) # calculate_priorities(tasks)    #1 Sort tasks by deadline (Deadline Monotonic)
+    #[1st, get hyperperiod, to let calculate T_required for each task]
+    global g_hyperperiod                                    # declare to use the global data
+    periods = [t.period for t in tasks]
+    g_hyperperiod = calculate_hyperperiod(periods)
+    T_available = [[0, g_hyperperiod]] 
+
+    #[2nd, sort tasks by deadline (Deadline Monotonic), along with index]
+    tasks.sort(key=lambda x: (x.deadline, x.index))         # calculate_priorities(tasks)  
     for i, t in enumerate(tasks):
-        t.priority = i # assign priority from 0~len-1 to each task, for display use
+        t.priority = i                                      # assign priority from 0~len-1 to each task, for display use
         t.t_required = t.calculate_required_times(g_hyperperiod)
 
-    is_feasible = True
-    # [schedule for all tasks]
-    for t in tasks:                 # Note tasks are in priority order
+    #[3rd, schedule for all tasks]
+    is_feasible = True                                      # is tasks feasible
+    for t in tasks:                                         # Note tasks are in priority order
         for req in t.t_required:
             T_available, T_allocated, IsOK = allocate_time_to_task(T_available, req, t.execution_time)
             t.is_feasible = IsOK
@@ -147,9 +139,9 @@ def allocate_time_to_tasks(tasks):
             t.preemptions += (len(T_allocated) - 1)
             t.t_allocated += T_allocated
 
-    # [get preemptions list]
+    #[4th, get preemptions list]
     preemptions = []
-    if IsOK:
+    if is_feasible:                                         # only when tasks are feasible
         tasks.sort(key=lambda x: x.index) # re-order to the task file line order
         for t in tasks:
             preemptions.append(t.preemptions)
@@ -158,28 +150,33 @@ def allocate_time_to_tasks(tasks):
 
 
 def print_task_allocations_report(tasks):
-    print(f"hyperperiod = {g_hyperperiod}")
-
     for task in tasks:
         print("\n" + '-' * 80)
         print(f"{task}")
+    print(f"hyperperiod = {g_hyperperiod}")
 
 
 #******************************************************************************
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python3 ece_652_final.py <input_file>")
-        return
+    if ENABLE_DEBUG_PRINT:
+        filename = 'workload2.txt'
+    else:
+        if len(sys.argv) != 2:
+            print("Usage: python3 ece_652_final.py <input_file>")
+            return
+        filename = sys.argv[1]
 
-    filename = sys.argv[1]
     read_file_to_list(filename) # read file and extract data to 'tasks'
     is_ok, preemptions = allocate_time_to_tasks(tasks)
-    # print_task_allocations_report(tasks)
+
     if is_ok:
         print("1")
         print(",".join(map(str, preemptions)))
     else:
         print("0")
+
+    if ENABLE_DEBUG_PRINT:
+        print_task_allocations_report(tasks)
 
 ## run the main here.
 if __name__ == '__main__':
