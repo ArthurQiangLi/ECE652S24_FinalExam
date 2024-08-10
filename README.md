@@ -8,7 +8,7 @@ Your objective is to implement a simulator for the Deadline Monotonic scheduling
 
 # My algorithm
 
-```
+```py
 My algorithm, take workload1.txt as example,
 T0 = [1,3,3], T1 = [2,4,5] as the input task set.
 Manage to data for the task set:
@@ -71,4 +71,43 @@ T_required = [[0, 5], [4, 9], [8, 12]]
 execution_time = 2.0
 Expected result: T_allocated = {[0, 5]:[1,3], [4, 9]: [4,6], [8, 12]: [8,9], [10,11]}
 
+```
+
+# Example (workload7.txt)
+
+For the case in the course material:
+
+```
+25,50,100
+10,62.5,20
+25,125,50
+```
+
+Set `ENABLE_DEBUG_PRINT = True ` in `ece_652_final.py`'s beginning and set `filename = 'workload7.txt'` in line 162. Run it and we get the result as show below, which matchs what I calculated manually.
+
+```py
+1
+1,0,0
+
+--------------------------------------------------------------------------------
+T0: e=25.0, per=50.0, d=100.0, preem=1, prio=2
+---- T_required=[(0, 100.0), (50.0, 150.0), (100.0, 200.0), (150.0, 250.0), (200.0, 300.0)],
+---- T_allocated=[[35.0, 60.0], [60.0, 62.5], [72.5, 95.0], [100.0, 125.0], [160.0, 185.0], [200.0, 225.0]]
+---- preemptions=1
+......................................................................[feasible: OK]
+
+--------------------------------------------------------------------------------
+T1: e=10.0, per=62.5, d=20.0, preem=0, prio=0
+---- T_required=[(0, 20.0), (62.5, 82.5), (125.0, 145.0), (187.5, 207.5)],
+---- T_allocated=[[0, 10.0], [62.5, 72.5], [125.0, 135.0], [187.5, 197.5]]
+---- preemptions=0
+......................................................................[feasible: OK]
+
+--------------------------------------------------------------------------------
+T2: e=25.0, per=125.0, d=50.0, preem=0, prio=1
+---- T_required=[(0, 50.0), (125.0, 175.0)],
+---- T_allocated=[[10.0, 35.0], [135.0, 160.0]]
+---- preemptions=0
+......................................................................[feasible: OK]
+hyperperiod = 250.0
 ```
